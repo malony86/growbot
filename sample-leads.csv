@@ -1,0 +1,6 @@
+company_name,contact_name,email,status
+株式会社ABC,田中太郎,tanaka@abc.com,pending
+XYZ商事,佐藤花子,sato@xyz.com,in_progress
+テスト企業,山田次郎,yamada@test.com,completed
+サンプル会社,鈴木三郎,suzuki@sample.com,pending
+開発会社,高橋四郎,takahashi@dev.com,in_progress 

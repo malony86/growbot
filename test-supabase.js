@@ -1,66 +1,55 @@
-require('dotenv').config();
+// Supabase接続テスト用スクリプト
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+async function testSupabaseConnection() {
+  console.log('🔧 Supabase接続テスト開始...');
 
-console.log('🔧 Supabase接続テスト開始...');
+  // 環境変数の確認
+  console.log('📋 設定確認:');
+  console.log('- NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ 設定済み' : '❌ 未設定');
+  console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ 設定済み' : '❌ 未設定');
 
-// 設定確認
-console.log('📋 設定確認:');
-console.log('- NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ 設定済み' : '❌ 未設定');
-console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseKey ? '✅ 設定済み' : '❌ 未設定');
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.log('❌ Supabase認証情報が設定されていません');
+    return;
+  }
 
-// 新規登録のテスト
-async function testSignUp() {
-  console.log('🔒 新規登録テスト開始...');
-
-  // テスト用のダミー情報
-  const testEmail = 'test@example.com';
-  const testPassword = 'testpass123';
+  // Supabaseクライアントの作成
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 
   try {
-    // 直接fetch APIを使用して新規登録を試す
-    const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`
-      },
-      body: JSON.stringify({
-        email: testEmail,
-        password: testPassword
-      })
-    });
+    // 認証の基本テスト
+    console.log('📤 Supabase接続テスト中...');
 
-    console.log('🌐 レスポンス状態:', response.status);
-    console.log('🌐 レスポンスヘッダー:', Object.fromEntries(response.headers));
+    // 現在のユーザー取得を試す
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('❌ エラーレスポンス:', errorText);
+    if (error) {
+      console.error('❌ Supabase接続エラー:', error.message);
 
-      // 401エラーの詳細を確認
-      if (response.status === 401) {
-        console.log('🔍 401エラー詳細分析:');
-        console.log('- API Key:', supabaseKey ? '設定済み' : '未設定');
-        console.log('- API Key長:', supabaseKey ? supabaseKey.length : 0);
-        console.log('- URL:', supabaseUrl);
-        console.log('- API Key先頭:', supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'なし');
+      if (error.message.includes('Invalid API key')) {
+        console.log('💡 ヒント: ANON_KEYが正しくない可能性があります');
+      } else if (error.message.includes('Invalid URL')) {
+        console.log('💡 ヒント: SUPABASE_URLが正しくない可能性があります');
       }
     } else {
-      const result = await response.json();
-      console.log('✅ 新規登録成功:', result);
+      console.log('✅ Supabase接続成功!');
+      console.log('👤 現在のユーザー:', user ? user.email : 'なし（未ログイン）');
     }
 
+    // プロジェクト情報の確認
+    console.log('🏗️  プロジェクト情報:');
+    console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20) + '...');
+
   } catch (error) {
-    console.log('❌ 新規登録エラー:', error.message);
+    console.error('❌ 予期しないエラー:', error.message);
   }
 }
 
-// 実行
-if (supabaseUrl && supabaseKey) {
-  testSignUp();
-} else {
-  console.log('❌ Supabase設定が不完全です');
-} 
+// テスト実行
+testSupabaseConnection().catch(console.error); 

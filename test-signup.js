@@ -1,14 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-// .env.localファイルの存在を確認
-const envPath = path.join(__dirname, '.env.local');
-console.log('📁 .env.localファイルの存在:', fs.existsSync(envPath) ? '✅ 存在' : '❌ 不存在');
-
-// デバッグ情報付きでdotenvを読み込み
-const dotenv = require('dotenv');
-const result = dotenv.config({ path: '.env.local', debug: true });
-console.log('🔧 dotenv読み込み結果:', result);
+require('dotenv').config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
