@@ -10,10 +10,18 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   // デモモードの判定
-  const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
+
+  // デバッグ情報を出力
+  console.log('🔧 環境変数の状態:');
+  console.log('NEXT_PUBLIC_DEMO_MODE:', process.env.NEXT_PUBLIC_DEMO_MODE);
+  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '設定済み' : '未設定');
+  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '設定済み' : '未設定');
+  console.log('📋 判定結果 - isDemo:', isDemo);
 
   // デモユーザーの情報
   const demoUser = {
@@ -63,11 +71,14 @@ export default function Home() {
   }, [isDemo]);
 
   const handleAuthSuccess = async () => {
+    console.log('🔐 認証成功処理開始, isDemo:', isDemo);
     if (isDemo) {
       // デモモードの場合はデモユーザーを設定
+      console.log('🎭 デモユーザーを設定中...');
       setUser(demoUser);
     } else {
       // 実際のSupabaseを使用する場合
+      console.log('🔐 Supabase認証確認中...');
       const currentUser = await auth.getCurrentUser();
       setUser(currentUser);
     }

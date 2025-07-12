@@ -14,12 +14,12 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // 環境変数がない場合はデモモードとして動作（一時的にデモモードに固定）
-    const isDemo = true; // 一時的にデモモードに固定
-    // const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    //     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    //     process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
-    //     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
+    // デモモードの判定
+    const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,7 +35,9 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
         try {
             if (isDemo) {
                 // デモモードでは認証をスキップ
+                console.log('🎭 デモモードでログイン処理中...');
                 setTimeout(() => {
+                    console.log('🎭 デモモードログイン成功');
                     onAuthSuccess();
                 }, 1000);
                 return;

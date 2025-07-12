@@ -29,12 +29,12 @@ export default function LeadsDashboard({ user, onLogout }: LeadsDashboardProps) 
         status: 'pending' as const
     });
 
-    // デモモードの判定（一時的にデモモードに固定）
-    const isDemo = true; // 一時的にデモモードに固定
-    // const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    //     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    //     process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
-    //     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
+    // デモモードの判定
+    const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
 
     // デモユーザーの情報
     const demoUser = {
