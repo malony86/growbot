@@ -6,6 +6,9 @@ import {
     getTemplatesByCategory 
 } from '@/lib/emailTemplates';
 
+// 静的エクスポート用の設定
+export const dynamic = 'force-static';
+
 export async function POST(request: NextRequest) {
     try {
         // リクエストボディの取得

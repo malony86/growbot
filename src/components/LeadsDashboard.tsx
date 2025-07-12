@@ -45,6 +45,12 @@ export default function LeadsDashboard({ user, onLogout }: LeadsDashboardProps) 
     const currentUser = isDemo ? demoUser : user;
 
     useEffect(() => {
+        // デモモードの場合、初期化時にデモデータをリセット
+        if (isDemo) {
+            console.log('🔄 デモモード初期化: データをリセット中...');
+            leadsApi.resetDemoData();
+        }
+        
         loadLeads();
         loadStats();
 

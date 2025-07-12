@@ -1,151 +1,12 @@
 'use client';
 
 import React from 'react';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    ChartOptions,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { format, subDays } from 'date-fns';
-
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-);
-
-interface KPIData {
-    date: string;
-    sent: number;
-    openRate: number;
-    replyRate: number;
-}
-
-// ダミーデータ生成
-const generateDummyData = (): KPIData[] => {
-    const data: KPIData[] = [];
-    const today = new Date();
-
-    for (let i = 14; i >= 0; i--) {
-        const date = subDays(today, i);
-        const sent = Math.floor(Math.random() * 50) + 10; // 10-60通
-        const openRate = Math.floor(Math.random() * 40) + 20; // 20-60%
-        const replyRate = Math.floor(Math.random() * 15) + 5; // 5-20%
-
-        data.push({
-            date: format(date, 'M/d'),
-            sent,
-            openRate,
-            replyRate,
-        });
-    }
-
-    return data;
-};
 
 const KPIChart: React.FC = () => {
-    const kpiData = generateDummyData();
-
-    const data = {
-        labels: kpiData.map(item => item.date),
-        datasets: [
-            {
-                label: '送信数',
-                data: kpiData.map(item => item.sent),
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                yAxisID: 'y',
-            },
-            {
-                label: '開封率 (%)',
-                data: kpiData.map(item => item.openRate),
-                borderColor: 'rgb(16, 185, 129)',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                yAxisID: 'y1',
-            },
-            {
-                label: '返信率 (%)',
-                data: kpiData.map(item => item.replyRate),
-                borderColor: 'rgb(245, 158, 11)',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                tension: 0.4,
-                yAxisID: 'y1',
-            },
-        ],
-    };
-
-    const options: ChartOptions<'line'> = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            mode: 'index' as const,
-            intersect: false,
-        },
-        plugins: {
-            legend: {
-                position: 'top' as const,
-            },
-            title: {
-                display: true,
-                text: 'KPI推移 (過去15日間)',
-                font: {
-                    size: 16,
-                    weight: 'bold',
-                },
-            },
-        },
-        scales: {
-            x: {
-                display: true,
-                title: {
-                    display: true,
-                    text: '日付',
-                },
-            },
-            y: {
-                type: 'linear' as const,
-                display: true,
-                position: 'left' as const,
-                title: {
-                    display: true,
-                    text: '送信数',
-                },
-                beginAtZero: true,
-            },
-            y1: {
-                type: 'linear' as const,
-                display: true,
-                position: 'right' as const,
-                title: {
-                    display: true,
-                    text: '率 (%)',
-                },
-                beginAtZero: true,
-                max: 100,
-                grid: {
-                    drawOnChartArea: false,
-                },
-            },
-        },
-    };
-
-    // KPIサマリー計算
-    const totalSent = kpiData.reduce((sum, item) => sum + item.sent, 0);
-    const avgOpenRate = (kpiData.reduce((sum, item) => sum + item.openRate, 0) / kpiData.length).toFixed(1);
-    const avgReplyRate = (kpiData.reduce((sum, item) => sum + item.replyRate, 0) / kpiData.length).toFixed(1);
+    // 一時的なダミーデータ
+    const totalSent = 425;
+    const avgOpenRate = "45.2";
+    const avgReplyRate = "12.8";
 
     return (
         <div className="bg-white rounded-lg shadow-lg p-6">
@@ -195,9 +56,15 @@ const KPIChart: React.FC = () => {
                 </div>
             </div>
 
-            {/* 折れ線グラフ */}
-            <div className="h-96 w-full">
-                <Line options={options} data={data} />
+            {/* チャートプレースホルダー */}
+            <div className="h-96 w-full bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p className="text-gray-500 text-lg font-medium">KPI推移 (過去15日間)</p>
+                    <p className="text-gray-400 text-sm">チャートは開発中です</p>
+                </div>
             </div>
 
             {/* デモモード表示 */}

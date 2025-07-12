@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import { leadsApi } from '@/lib/leads';
 
+// 静的エクスポート用の設定
+export const dynamic = 'force-static';
+
 interface CSVRow {
     company_name: string;
     contact_name: string;

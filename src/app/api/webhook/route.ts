@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// 静的エクスポート用の設定
+export const dynamic = 'force-static';
+
 // Amazon SES SNS通知イベントの型定義
 interface SESNotification {
     Type: string;

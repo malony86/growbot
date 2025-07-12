@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, isDemoMode, isGmailMode, isMailtrapMode, isCustomSMTPMode, isAwsMode, getCurrentMode } from '@/lib/ses';
 import { createClient } from '@supabase/supabase-js';
 
+// 静的エクスポート用の設定
+export const dynamic = 'force-static';
+
 // Supabaseクライアントを安全に作成する関数
 function createSupabaseClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

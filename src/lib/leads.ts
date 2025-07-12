@@ -7,61 +7,153 @@ const isSupabaseConfigured = () => {
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
         return false;
     }
-    
+
     return process.env.NEXT_PUBLIC_SUPABASE_URL &&
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
         process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-project-url' &&
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-anon-key';
 };
 
-// デモ用のダミーデータ
-const demoLeads: Lead[] = [
-    {
-        id: '1',
-        created_at: new Date().toISOString(),
-        company_name: 'サンプル株式会社',
-        contact_name: '田中太郎',
-        email: 'tanaka@sample.com',
-        status: 'pending',
-        email_status: 'pending',
-        user_id: 'demo-user'
-    },
-    {
-        id: '2',
-        created_at: new Date().toISOString(),
-        company_name: 'テスト商事',
-        contact_name: '佐藤花子',
-        email: 'sato@test.com',
-        status: 'sent',
-        email_status: 'delivered',
-        user_id: 'demo-user'
-    },
-    {
-        id: '3',
-        created_at: new Date().toISOString(),
-        company_name: 'デモ企業',
-        contact_name: '鈴木一郎',
-        email: 'suzuki@demo.com',
-        status: 'in_progress',
-        email_status: 'opened',
-        user_id: 'demo-user'
-    },
-    {
-        id: '4',
-        created_at: new Date().toISOString(),
-        company_name: 'サンプル会社',
-        contact_name: '田中次郎',
-        email: 'tanaka@sample.co.jp',
-        status: 'completed',
-        email_status: 'clicked',
-        user_id: 'demo-user'
+// デモ用のダミーデータ - シンプルで確実な一意IDを生成
+let idCounter = 0;
+const sessionId = Math.floor(Math.random() * 1000000); // セッション固有のID
+
+// シンプルで確実な一意ID生成
+const generateSimpleUniqueId = () => {
+    idCounter++;
+    return `demo-${sessionId}-${idCounter}`;
+};
+
+// 既存のIDとの重複チェック
+const ensureUniqueId = (existingLeads: Lead[] = demoLeads) => {
+    let id = generateSimpleUniqueId();
+    let attempts = 0;
+    
+    // 万が一の重複チェック
+    while (existingLeads.some(lead => lead.id === id) && attempts < 100) {
+        attempts++;
+        id = generateSimpleUniqueId();
     }
-];
+    
+    if (attempts >= 100) {
+        // 最後の手段として、タイムスタンプを追加
+        id = `demo-${sessionId}-${idCounter}-${Date.now()}`;
+    }
+    
+    return id;
+};
+
+// デモデータを初期化する関数
+const initializeDemoData = (): Lead[] => {
+    const tempLeads: Lead[] = [];
+
+    const demoData = [
+        {
+            company_name: 'サンプル株式会社',
+            contact_name: '田中太郎',
+            email: 'tanaka@sample.com',
+            status: 'pending' as const,
+            email_status: 'pending' as const
+        },
+        {
+            company_name: 'テスト商事',
+            contact_name: '佐藤花子',
+            email: 'sato@test.com',
+            status: 'sent' as const,
+            email_status: 'delivered' as const
+        },
+        {
+            company_name: 'デモ企業',
+            contact_name: '鈴木一郎',
+            email: 'suzuki@demo.com',
+            status: 'in_progress' as const,
+            email_status: 'opened' as const
+        },
+        {
+            company_name: 'サンプル会社',
+            contact_name: '田中次郎',
+            email: 'tanaka@sample.co.jp',
+            status: 'completed' as const,
+            email_status: 'clicked' as const
+        }
+    ];
+
+    demoData.forEach(data => {
+        tempLeads.push({
+            id: ensureUniqueId(tempLeads),
+            created_at: new Date().toISOString(),
+            company_name: data.company_name,
+            contact_name: data.contact_name,
+            email: data.email,
+            status: data.status,
+            email_status: data.email_status,
+            user_id: 'demo-user'
+        });
+    });
+
+    return tempLeads;
+};
+
+const demoLeads: Lead[] = initializeDemoData();
 
 export const leadsApi = {
+    // デモデータをリセットする
+    resetDemoData() {
+        if (!isSupabaseConfigured()) {
+            console.log('🔄 デモデータをリセット中...');
+            
+            // カウンターもリセット
+            idCounter = 0;
+            
+            // 配列を完全にクリア
+            demoLeads.length = 0;
+            
+            // 新しいデータを生成
+            const freshData = initializeDemoData();
+            demoLeads.push(...freshData);
+            
+            console.log('✅ デモデータリセット完了:', {
+                総件数: demoLeads.length,
+                IDサンプル: demoLeads.slice(0, 2).map(l => l.id),
+                全ID: demoLeads.map(l => l.id)
+            });
+        }
+    },
+
     // すべてのリードを取得
     async getLeads(userId?: string): Promise<{ data: Lead[] | null; error: any }> {
         if (!isSupabaseConfigured()) {
+            console.log('🔍 デモモード - リード取得前の状態:', {
+                総件数: demoLeads.length,
+                全ID: demoLeads.map(l => l.id),
+                重複チェック: demoLeads.length !== new Set(demoLeads.map(l => l.id)).size
+            });
+
+                        // 重複を除去する処理を追加
+            const uniqueLeads = demoLeads.filter((lead, index, self) =>
+                index === self.findIndex(l => l.id === lead.id)
+            );
+            
+            // 重複が発見された場合は配列を更新
+            if (uniqueLeads.length !== demoLeads.length) {
+                const duplicateIds = demoLeads.map(l => l.id).filter((id, index, self) => self.indexOf(id) !== index);
+                console.log('⚠️ 重複データを検出し、除去しました:', {
+                    除去前: demoLeads.length,
+                    除去後: uniqueLeads.length,
+                    重複件数: demoLeads.length - uniqueLeads.length,
+                    重複ID: duplicateIds
+                });
+                
+                // 配列を完全にクリアして再構築
+                demoLeads.length = 0;
+                demoLeads.push(...uniqueLeads);
+                
+                console.log('🔧 重複除去後の状態:', {
+                    件数: demoLeads.length,
+                    全ID: demoLeads.map(l => l.id)
+                });
+            }
+
             console.log('📋 デモモード - リード取得:', {
                 総件数: demoLeads.length,
                 ユーザーID: userId,
@@ -113,11 +205,14 @@ export const leadsApi = {
     // 新しいリードを作成
     async createLead(lead: NewLead): Promise<{ data: Lead | null; error: any }> {
         if (!isSupabaseConfigured()) {
-            // より一意性の高いID生成（タイムスタンプ + ランダム値）
-            const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            // メールアドレスの重複チェック
+            const existingLead = demoLeads.find(l => l.email === lead.email);
+            if (existingLead) {
+                return { data: null, error: new Error('このメールアドレスは既に登録されています') };
+            }
 
             const newLead: Lead = {
-                id: uniqueId,
+                id: ensureUniqueId(),
                 created_at: new Date().toISOString(),
                 company_name: lead.company_name,
                 contact_name: lead.contact_name,
@@ -240,11 +335,18 @@ export const leadsApi = {
             });
 
             const newLeads: Lead[] = [];
+            const skippedEmails: string[] = [];
 
             for (const lead of leads) {
-                const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                // メールアドレスの重複チェック
+                const existingLead = demoLeads.find(l => l.email === lead.email);
+                if (existingLead) {
+                    skippedEmails.push(lead.email);
+                    continue;
+                }
+
                 const newLead: Lead = {
-                    id: uniqueId,
+                    id: ensureUniqueId([...demoLeads, ...newLeads]),
                     created_at: new Date().toISOString(),
                     company_name: lead.company_name,
                     contact_name: lead.contact_name,
@@ -255,6 +357,10 @@ export const leadsApi = {
                 };
                 newLeads.push(newLead);
                 demoLeads.unshift(newLead);
+            }
+
+            if (skippedEmails.length > 0) {
+                console.log('⚠️ 重複のため追加をスキップしたメールアドレス:', skippedEmails);
             }
 
             console.log('✅ デモモード - 一括追加完了:', {
