@@ -1,8 +1,13 @@
 import { supabase } from './supabase';
 import { Lead, NewLead, UpdateLead } from '@/types/database';
 
-// 環境変数チェック関数を修正
+// 環境変数チェック関数を修正 - デモモード判定を統一
 const isSupabaseConfigured = () => {
+    // デモモードが有効な場合はSupabaseを使用しない
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return false;
+    }
+    
     return process.env.NEXT_PUBLIC_SUPABASE_URL &&
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
         process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-project-url' &&

@@ -5,8 +5,13 @@ import { Database } from '@/types/database';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// 環境変数が正しく設定されているかチェック
+// 環境変数が正しく設定されているかチェック - デモモード判定を統一
 const isSupabaseConfigured = () => {
+    // デモモードが有効な場合はSupabaseを使用しない
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+        return false;
+    }
+    
     return supabaseUrl &&
         supabaseKey &&
         supabaseUrl !== 'your-project-url' &&

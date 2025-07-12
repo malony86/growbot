@@ -9,9 +9,13 @@ interface CSVRow {
     status: 'pending' | 'sent' | 'in_progress' | 'completed';
 }
 
-// デモモードの判定関数（現在はCSVアップロードを常にデモモードで動作）
+// デモモードの判定関数
 function getIsDemo() {
-    return true; // 一時的にデモモードに固定
+    return process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'your-anon-key';
 }
 
 export async function POST(request: NextRequest) {
@@ -102,37 +106,67 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // デモモードでの処理
-        console.log('📝 デモモード - CSV データを受信:', validLeads);
+        // デモモード判定
+        const isDemo = getIsDemo();
 
-        // デモモード用のデータを準備（user_idは使用しない）
-        const leadsToAdd = validLeads.map(lead => ({
-            company_name: lead.company_name,
-            contact_name: lead.contact_name,
-            email: lead.email,
-            status: lead.status,
-            email_status: 'pending' as const,
-            user_id: 'demo-user' // デモモードでは無視される
-        }));
+        if (isDemo) {
+            // デモモードでの処理
+            console.log('📝 デモモード - CSV データを受信:', validLeads);
 
-        // デモモード用のBulk追加APIを呼び出し
-        const { data, error } = await leadsApi.createBulkLeads(leadsToAdd);
+            // デモモードでは実際のデータベースには保存せず、成功レスポンスのみ返す
+            const demoData = validLeads.map((lead, index) => ({
+                id: `demo-${Date.now()}-${index}`,
+                created_at: new Date().toISOString(),
+                company_name: lead.company_name,
+                contact_name: lead.contact_name,
+                email: lead.email,
+                status: lead.status,
+                email_status: 'pending' as const,
+                user_id: 'demo-user'
+            }));
 
-        if (error) {
-            console.error('❌ デモモードでの一括追加エラー:', error);
-            return NextResponse.json(
-                { error: 'デモモードでのデータ追加に失敗しました' },
-                { status: 500 }
-            );
+            console.log('✅ デモモード: CSVデータを処理完了');
+
+            return NextResponse.json({
+                success: true,
+                message: `✅ デモモード: ${validLeads.length}件のリードが正常に追加されました`,
+                count: validLeads.length,
+                data: demoData,
+                demo: true
+            });
+        } else {
+            // 本番モードでの処理
+            console.log('📝 本番モード - CSV データを受信:', validLeads);
+
+            // 本番モード用のデータを準備
+            const leadsToAdd = validLeads.map(lead => ({
+                company_name: lead.company_name,
+                contact_name: lead.contact_name,
+                email: lead.email,
+                status: lead.status,
+                email_status: 'pending' as const,
+                user_id: 'actual-user-id' // 本番では実際のユーザーIDを使用
+            }));
+
+            // 本番モード用のBulk追加APIを呼び出し
+            const { data, error } = await leadsApi.createBulkLeads(leadsToAdd);
+
+            if (error) {
+                console.error('❌ 本番モードでの一括追加エラー:', error);
+                return NextResponse.json(
+                    { error: '本番モードでのデータ追加に失敗しました' },
+                    { status: 500 }
+                );
+            }
+
+            return NextResponse.json({
+                success: true,
+                message: `✅ 本番モード: ${validLeads.length}件のリードが正常に追加されました`,
+                count: validLeads.length,
+                data: data,
+                demo: false
+            });
         }
-
-        return NextResponse.json({
-            success: true,
-            message: `✅ デモモード: ${validLeads.length}件のリードが正常に追加されました`,
-            count: validLeads.length,
-            data: data,
-            demo: true
-        });
 
     } catch (error) {
         console.error('❌ CSV upload error:', error);
