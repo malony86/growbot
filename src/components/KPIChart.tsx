@@ -42,21 +42,45 @@ const KPIChart: React.FC = () => {
                 data: [25, 30, 28, 35, 32, 40, 38, 45, 42, 50, 48, 55, 52, 58, 60],
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.1
+                tension: 0.5,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgb(59, 130, 246)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                fill: true,
+                cubicInterpolationMode: 'monotone'
             },
             {
                 label: '開封率 (%)',
                 data: [42, 45, 48, 46, 49, 52, 50, 54, 53, 56, 55, 58, 57, 60, 59],
                 borderColor: 'rgb(34, 197, 94)',
                 backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                tension: 0.1
+                tension: 0.5,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgb(34, 197, 94)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                fill: true,
+                cubicInterpolationMode: 'monotone'
             },
             {
                 label: '返信率 (%)',
                 data: [10, 12, 11, 13, 14, 15, 13, 16, 15, 17, 16, 18, 17, 19, 18],
                 borderColor: 'rgb(234, 179, 8)',
                 backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                tension: 0.1
+                tension: 0.5,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgb(234, 179, 8)',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                fill: true,
+                cubicInterpolationMode: 'monotone'
             }
         ]
     };

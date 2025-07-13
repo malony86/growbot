@@ -14,32 +14,33 @@ const isSupabaseConfigured = () => {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-anon-key';
 };
 
-// デモ用のダミーデータ - シンプルで確実な一意IDを生成
+// デモ用のダミーデータ - より確実な一意ID生成
 let idCounter = 0;
-const sessionId = Math.floor(Math.random() * 1000000); // セッション固有のID
+const sessionId = `${Date.now()}-${Math.floor(Math.random() * 1000000)}`; // タイムスタンプ+ランダムで確実にユニーク
 
-// シンプルで確実な一意ID生成
-const generateSimpleUniqueId = () => {
+// 確実に一意なID生成
+const generateUniqueId = () => {
     idCounter++;
     return `demo-${sessionId}-${idCounter}`;
 };
 
-// 既存のIDとの重複チェック
+// 既存のIDとの重複チェック（念のため）
 const ensureUniqueId = (existingLeads: Lead[] = demoLeads) => {
-    let id = generateSimpleUniqueId();
+    let id = generateUniqueId();
     let attempts = 0;
-    
+
     // 万が一の重複チェック
-    while (existingLeads.some(lead => lead.id === id) && attempts < 100) {
+    while (existingLeads.some(lead => lead.id === id) && attempts < 10) {
         attempts++;
-        id = generateSimpleUniqueId();
+        id = generateUniqueId();
     }
-    
-    if (attempts >= 100) {
-        // 最後の手段として、タイムスタンプを追加
+
+    if (attempts >= 10) {
+        // 最後の手段として、追加のタイムスタンプを追加
         id = `demo-${sessionId}-${idCounter}-${Date.now()}`;
     }
-    
+
+    console.log(`🔑 ID生成: ${id} (試行回数: ${attempts})`);
     return id;
 };
 
@@ -101,21 +102,21 @@ export const leadsApi = {
     resetDemoData() {
         if (!isSupabaseConfigured()) {
             console.log('🔄 デモデータをリセット中...');
-            
+
             // カウンターもリセット
             idCounter = 0;
-            
+
             // 配列を完全にクリア
             demoLeads.length = 0;
-            
+
             // 新しいデータを生成
             const freshData = initializeDemoData();
             demoLeads.push(...freshData);
-            
+
             console.log('✅ デモデータリセット完了:', {
                 総件数: demoLeads.length,
                 IDサンプル: demoLeads.slice(0, 2).map(l => l.id),
-                全ID: demoLeads.map(l => l.id)
+                新しいセッションID: sessionId
             });
         }
     },
@@ -129,11 +130,11 @@ export const leadsApi = {
                 重複チェック: demoLeads.length !== new Set(demoLeads.map(l => l.id)).size
             });
 
-                        // 重複を除去する処理を追加
+            // 重複を除去する処理を追加
             const uniqueLeads = demoLeads.filter((lead, index, self) =>
                 index === self.findIndex(l => l.id === lead.id)
             );
-            
+
             // 重複が発見された場合は配列を更新
             if (uniqueLeads.length !== demoLeads.length) {
                 const duplicateIds = demoLeads.map(l => l.id).filter((id, index, self) => self.indexOf(id) !== index);
@@ -143,11 +144,11 @@ export const leadsApi = {
                     重複件数: demoLeads.length - uniqueLeads.length,
                     重複ID: duplicateIds
                 });
-                
+
                 // 配列を完全にクリアして再構築
                 demoLeads.length = 0;
                 demoLeads.push(...uniqueLeads);
-                
+
                 console.log('🔧 重複除去後の状態:', {
                     件数: demoLeads.length,
                     全ID: demoLeads.map(l => l.id)

@@ -81,54 +81,81 @@ export default function CSVUpload({ onClose, onSuccess }: CSVUploadProps) {
         setSuccess('');
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-
             console.log('📤 CSVアップロード開始:', file.name);
+            console.log('🔍 CSVアップロード方式: クライアントサイドPapa.parse（APIサーバー不使用）');
 
-            const response = await fetch('/api/upload-csv', {
-                method: 'POST',
-                body: formData,
+            // CSVファイルを直接パースして処理
+            Papa.parse(file, {
+                header: true,
+                complete: async (results) => {
+                    try {
+                        const data = results.data as any[];
+                        const validRows: any[] = [];
+
+                        data.forEach((row, index) => {
+                            // 必須フィールドの確認
+                            if (row.company_name && row.contact_name && row.email) {
+                                validRows.push({
+                                    company_name: row.company_name.trim(),
+                                    contact_name: row.contact_name.trim(),
+                                    email: row.email.trim(),
+                                    status: row.status && ['pending', 'in_progress', 'completed'].includes(row.status)
+                                        ? row.status
+                                        : 'pending',
+                                    user_id: 'demo-user'
+                                });
+                            }
+                        });
+
+                        if (validRows.length === 0) {
+                            setError('有効なデータが見つかりません。CSVファイルの形式を確認してください。');
+                            setUploading(false);
+                            return;
+                        }
+
+                        // leadsApiを使用してデータを直接追加
+                        const { leadsApi } = await import('@/lib/leads');
+                        const { data: newLeads, error } = await leadsApi.createBulkLeads(validRows);
+
+                        if (error) {
+                            throw new Error(error.message || 'データの追加に失敗しました');
+                        }
+
+                        console.log('✅ アップロード成功:', newLeads?.length || 0, '件追加');
+                        setSuccess(`${newLeads?.length || 0}件のリードが正常に追加されました。`);
+                        setFile(null);
+                        setPreview([]);
+
+                        // ファイル入力をリセット
+                        if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                        }
+
+                        // 成功後に親コンポーネントに通知
+                        setTimeout(() => {
+                            onSuccess();
+                            onClose();
+                        }, 2000);
+
+                    } catch (err) {
+                        console.error('❌ CSVアップロードエラー:', err);
+                        if (err instanceof Error) {
+                            setError(`アップロードエラー: ${err.message}`);
+                        } else {
+                            setError('アップロードに失敗しました。もう一度お試しください。');
+                        }
+                        setUploading(false);
+                    }
+                },
+                error: (error) => {
+                    setError('CSVファイルの読み取りに失敗しました: ' + error.message);
+                    setUploading(false);
+                }
             });
-
-            console.log('📊 レスポンス状態:', response.status);
-
-            const result = await response.json();
-            console.log('📋 レスポンス内容:', result);
-
-            if (!response.ok) {
-                console.error('❌ アップロードエラー:', result);
-                throw new Error(result.error || `HTTP ${response.status}: アップロードに失敗しました`);
-            }
-
-            console.log('✅ アップロード成功:', result);
-            setSuccess(`${result.count}件のリードが正常に追加されました。`);
-            setFile(null);
-            setPreview([]);
-
-            // ファイル入力をリセット
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-
-            // 成功後に親コンポーネントに通知
-            setTimeout(() => {
-                onSuccess();
-                onClose();
-            }, 2000);
 
         } catch (err) {
             console.error('❌ CSVアップロードエラー:', err);
-
-            // より詳細なエラーメッセージ
-            if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-                setError('サーバーとの通信に失敗しました。サーバーが起動しているか確認してください。');
-            } else if (err instanceof Error) {
-                setError(`アップロードエラー: ${err.message}`);
-            } else {
-                setError('アップロードに失敗しました。もう一度お試しください。');
-            }
-        } finally {
+            setError('アップロードに失敗しました。もう一度お試しください。');
             setUploading(false);
         }
     };
